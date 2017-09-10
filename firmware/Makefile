@@ -8,7 +8,7 @@ FUSE_H  = 0XDF
 AVRDUDE = avrdude -c dragon_isp -B 50 -p $(DEVICE_DUDE) -e
 OBJECTS = main.o
 CFLAGS  = -I.
-COMPILE = avr-gcc -g -Wall -Os -DF_CPU=$(F_CPU) $(CFLAGS) -mmcu=$(DEVICE)
+COMPILE = avr-gcc -Wall -Os -DF_CPU=$(F_CPU) $(CFLAGS) -mmcu=$(DEVICE)
 
 
 help:
@@ -51,7 +51,7 @@ main.hex: main.elf
 # The $(OBJECT) dependency is necessary to automagically compile
 # the object files (*.o) using generic rules defined below.
 main.elf: $(OBJECTS)
-	$(COMPILE) -o main.elf $(OBJECTS) -nostartfiles /usr/lib/avr/lib/avr25/crttn88.o
+	$(COMPILE) -o main.elf $(OBJECTS)
 
 
 # Generic rule for compiling C files:

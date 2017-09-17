@@ -5,8 +5,8 @@ F_CPU   = 1000000	# Hz
 FUSE_L  = 0x6E
 FUSE_H  = 0XDF
 
-AVRDUDE = avrdude -c dragon_isp -B 50 -p $(DEVICE_DUDE) -e
-OBJECTS = main.o
+AVRDUDE = avrdude -c dragon_isp -B 20 -p $(DEVICE_DUDE) -e
+OBJECTS = main.o dotmatrix.o
 CFLAGS  = -I.
 COMPILE = avr-gcc -Wall -Os -DF_CPU=$(F_CPU) $(CFLAGS) -mmcu=$(DEVICE)
 

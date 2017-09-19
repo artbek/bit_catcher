@@ -4,13 +4,106 @@
 #include "dotmatrix.h"
 
 uchar display_rows[ROWS_COUNT] = {
-	0b00011111,
-	0b00011111,
-	0b00011111,
-	0b00011111,
-	0b00011111,
-	0b00011111,
-	0b00011111,
+	0b00010101,
+	0b00001010,
+	0b00010101,
+	0b00001010,
+	0b00010101,
+	0b00001010,
+	0b00010101,
+};
+
+uchar display__digits[10][7] = {
+	{
+		0b00001110,
+		0b00010001,
+		0b00010001,
+		0b00010001,
+		0b00010001,
+		0b00010001,
+		0b00001110,
+	},
+	{
+		0b00000100,
+		0b00001100,
+		0b00010100,
+		0b00000100,
+		0b00000100,
+		0b00000100,
+		0b00011111,
+	},
+	{
+		0b00001110,
+		0b00010001,
+		0b00010001,
+		0b00000010,
+		0b00000100,
+		0b00001000,
+		0b00011111,
+	},
+	{
+		0b00001110,
+		0b00010001,
+		0b00000001,
+		0b00000110,
+		0b00000001,
+		0b00010001,
+		0b00001110,
+	},
+	{
+		0b00010001,
+		0b00010001,
+		0b00010001,
+		0b00011111,
+		0b00000001,
+		0b00000001,
+		0b00000001,
+	},
+	{
+		0b00011111,
+		0b00010000,
+		0b00010000,
+		0b00001110,
+		0b00000001,
+		0b00010001,
+		0b00001110,
+	},
+	{
+		0b00000010,
+		0b00000100,
+		0b00001000,
+		0b00011110,
+		0b00010001,
+		0b00010001,
+		0b00001110,
+	},
+	{
+		0b00000000,
+		0b00011111,
+		0b00000001,
+		0b00000010,
+		0b00000100,
+		0b00001000,
+		0b00010000,
+	},
+	{
+		0b00001110,
+		0b00010001,
+		0b00010001,
+		0b00001110,
+		0b00010001,
+		0b00010001,
+		0b00001110,
+	},
+	{
+		0b00001110,
+		0b00010001,
+		0b00010001,
+		0b00001111,
+		0b00000010,
+		0b00000100,
+		0b00001000,
+	},
 };
 
 void display__init_cols()
@@ -62,7 +155,7 @@ uchar display__bit_get(uchar r, uchar c) { return display_rows[r] & _BV(MAX_COL_
 void  display__bit_set(uchar r, uchar c) { display_rows[r] |= _BV(MAX_COL_INDEX - c); }
 void  display__bit_clr(uchar r, uchar c) { display_rows[r] &= ~_BV(MAX_COL_INDEX - c); }
 
-uchar display__row_get(uchar r, uchar c) { return display_rows[r]; }
+uchar display__row_get(uchar r) { return display_rows[r]; }
 void  display__row_set(uchar r, uchar row_byte) { display_rows[r] = row_byte; }
 void  display__row_clear(uchar r) { display_rows[r] = 0; }
 
@@ -77,7 +170,7 @@ void display__clear()
 void display__scroll_down()
 {
 	uchar r;
-	for (r = 6; r > 0; r--) {
+	for (r = ROWS_COUNT; r > 0; r--) {
 		display_rows[r] = display_rows[r-1];
 	}
 
@@ -102,3 +195,76 @@ void display__flush()
 		row_on(r);
 	}
 }
+
+
+// Horizontal buffer.
+
+uchar display__buffer_cursor_left = 0;
+uchar display__buffer_cursor_right = MAX_COL_INDEX;
+uchar display__buffer_cursor_max = 0;
+
+void display__col_set(uchar c, uchar col_byte)
+{
+	uchar r;
+
+	for (r = 0; r < ROWS_COUNT; r++) {
+		if (col_byte & _BV(MAX_ROW_INDEX - r)) {
+			display__bit_set(r, c);
+		} else {
+		}
+	}
+}
+
+void send_display_buffer_to_display()
+{
+	uchar c = 0;
+	uchar i;
+
+	display__clear();
+
+	for (i = display__buffer_cursor_left; i <= display__buffer_cursor_right; i++) {
+		display__col_set(c, display__buffer[i]);
+		c++;
+	}
+}
+
+void display__scroll_left()
+{
+	if (display__buffer_cursor_right < display__buffer_cursor_max) {
+		display__buffer_cursor_left++;
+		display__buffer_cursor_right++;
+	}
+
+}
+
+void display__scroll_right()
+{
+	if (display__buffer_cursor_left > 0) {
+		display__buffer_cursor_left--;
+		display__buffer_cursor_right--;
+	}
+}
+
+uchar display__can_scroll_left()
+{
+	if (display__buffer_cursor_right < display__buffer_cursor_max) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+uchar display__can_scroll_right()
+{
+	if (display__buffer_cursor_left > 0) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+void display__buffer__column_set(uchar column_index, uchar column_byte)
+{
+	display__buffer[column_index] = column_byte;
+}
+

@@ -5,10 +5,10 @@ F_CPU   = 1000000	# Hz
 FUSE_L  = 0x6E
 FUSE_H  = 0XDF
 
-AVRDUDE = avrdude -c dragon_isp -B 20 -p $(DEVICE_DUDE) -e
+AVRDUDE = avrdude -c dragon_isp -B 10 -p $(DEVICE_DUDE) -e -V
 OBJECTS = main.o dotmatrix.o
 CFLAGS  = -I.
-COMPILE = avr-gcc -Wall -Os -DF_CPU=$(F_CPU) $(CFLAGS) -mmcu=$(DEVICE)
+COMPILE = avr-gcc -Wall -DF_CPU=$(F_CPU) $(CFLAGS) -mmcu=$(DEVICE) -Os
 
 
 help:
@@ -43,19 +43,29 @@ hex: main.hex
 
 
 main.hex: main.elf
+	@echo
+	@echo '================  Generating .HEX  =================='
 	rm -f main.hex main.eep.hex
 	avr-objcopy -j .text -j .data -O ihex main.elf main.hex
+	@echo
+	@echo '================    STATISTICS     =================='
 	avr-size main.hex
+	@echo
 	avr-size --mcu=$(DEVICE) -C main.elf
+
 
 # The $(OBJECT) dependency is necessary to automagically compile
 # the object files (*.o) using generic rules defined below.
 main.elf: $(OBJECTS)
+	@echo
+	@echo '================  Generating .ELF  =================='
 	$(COMPILE) -o main.elf $(OBJECTS)
 
 
 # Generic rule for compiling C files:
 .c.o:
+	@echo
+	@echo '================   Generating .O   =================='
 	echo $< $@
 	$(COMPILE) -c $< -o $@
 

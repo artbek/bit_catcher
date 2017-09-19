@@ -50,6 +50,8 @@
 			}
 		}
 
+var score__digits_count = 0;
+var score__actual_digits = [];
 
 		function flush() {
 			if (! canvas) {
@@ -64,8 +66,17 @@
 					console.log(score);
 				} else {
 					game_over = true;
-					score = score.toString();
-					show_score_scroll_max = 5 * (score.length - 1);
+					score = 120;
+					var temp_score = score;
+					while (Math.floor(temp_score / 10)) {
+						score__actual_digits[score__digits_count] = temp_score % 10;
+						score__digits_count++;
+						temp_score = Math.floor(temp_score / 10);
+					}
+
+					score__actual_digits[score__digits_count] = temp_score;
+
+					show_score_scroll_max = 5 * score__digits_count;
 				}
 			}
 
@@ -138,8 +149,8 @@ var rows = [
 			var digit_column_index = (show_score_scroll % 5);
 
 			for (i = 0; i < 5; i++) {
-				for (r = 6; r >= 0; r--) {
-					var actual_digit = score[digit_index];
+				for (r = 0; r < 7; r++) {
+					var actual_digit = score__actual_digits[score__digits_count - digit_index];
 					if (digits[actual_digit][r] & (1 << (4 - digit_column_index))) {
 						display_set(i, r);
 					} else {
@@ -154,7 +165,7 @@ var rows = [
 
 					// insert spacer column
 					i++;
-					for (r = 6; r >= 0; r--) {
+					for (r = 0; r < 7; r++) {
 						display_clear(i, r);
 					}
 				}

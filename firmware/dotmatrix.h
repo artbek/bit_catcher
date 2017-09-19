@@ -20,6 +20,7 @@
 
 
 uchar display_rows[ROWS_COUNT];
+uchar display__digits[10][ROWS_COUNT];
 
 volatile uint8_t *row_ports[ROWS_COUNT];
 volatile uint8_t *col_ports[COLS_COUNT];
@@ -45,11 +46,29 @@ uchar display__bit_get(uchar r, uchar c);
 void  display__bit_set(uchar r, uchar c);
 void  display__bit_clr(uchar r, uchar c);
 
-uchar display__row_get(uchar r, uchar c);
+uchar display__row_get(uchar r);
 void  display__row_set(uchar r, uchar row_byte);
 void  display__row_clear(uchar r);
 
 void display__clear();
 void display__scroll_down();
 void display__flush();
+
+
+// Horizontal buffer.
+
+uchar display__buffer[25];
+uchar display__buffer_cursor_left;
+uchar display__buffer_cursor_right;
+uchar display__buffer_cursor_max;
+
+void send_display_buffer_to_display();
+
+void display__scroll_left();
+void display__scroll_right();
+
+uchar display__can_scroll_left();
+uchar display__can_scroll_right();
+
+void display__buffer__column_set(uchar column_index, uchar column_byte);
 

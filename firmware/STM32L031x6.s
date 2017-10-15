@@ -1,8 +1,6 @@
-.equ DELAY, 0x0000ffff
-.equ MASK, 0x1fffff //1000000
-
-
 @ STM32L031K6
+
+.equ SRAM, 0x20000000
 
 @================================================@
 
@@ -26,11 +24,22 @@
 @================================================@
 
 .equ GPIOA, 0x50000000
+.equ GPIOB, 0x50000400
 
-.equ GPIOA_MODER, GPIOA + 0x00
-.equ GPIOA_PUPDR, GPIOA + 0x0C
-.equ GPIOA_IDR, GPIOA + 0x10
-.equ GPIOA_ODR, GPIOA + 0x14
+.equ MODER_OFFSET, 0x00
+.equ PUPDR_OFFSET, 0x0C
+.equ IDR_OFFSET, 0x10
+.equ ODR_OFFSET, 0x14
+
+.equ GPIOA_MODER, GPIOA + MODER_OFFSET
+.equ GPIOA_PUPDR, GPIOA + PUPDR_OFFSET
+.equ GPIOA_IDR, GPIOA + IDR_OFFSET
+.equ GPIOA_ODR, GPIOA + ODR_OFFSET
+
+.equ GPIOB_MODER, GPIOB + MODER_OFFSET
+.equ GPIOB_PUPDR, GPIOB + PUPDR_OFFSET
+.equ GPIOB_IDR, GPIOB + IDR_OFFSET
+.equ GPIOB_ODR, GPIOB + ODR_OFFSET
 
 @================================================@
 

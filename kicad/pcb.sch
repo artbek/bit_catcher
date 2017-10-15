@@ -108,7 +108,7 @@ U 1 1 59DC1373
 P 4950 1650
 F 0 "J0" H 4950 1850 50  0000 C CNN
 F 1 "Conn_01x04" H 4950 1350 50  0000 C CNN
-F 2 "Connect:bornier4" H 4950 1650 50  0001 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x04" H 4950 1650 50  0001 C CNN
 F 3 "" H 4950 1650 50  0001 C CNN
 	1    4950 1650
 	0    -1   -1   0   
@@ -330,7 +330,7 @@ Wire Wire Line
 Wire Wire Line
 	4200 5100 4200 4300
 Wire Wire Line
-	1000 5100 1000 1550
+	1000 1550 1000 5100
 $Comp
 L +3V3 #PWR03
 U 1 1 59DD8C75
@@ -435,4 +435,23 @@ Wire Wire Line
 	6050 4500 6050 4200
 Wire Wire Line
 	6050 4200 6150 4200
+$Comp
+L C C0
+U 1 1 59E23C90
+P 2100 3650
+F 0 "C0" H 2125 3750 50  0000 L CNN
+F 1 "100nF" H 2125 3550 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 2138 3500 50  0001 C CNN
+F 3 "" H 2100 3650 50  0001 C CNN
+	1    2100 3650
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2100 3800 2100 4000
+Wire Wire Line
+	2100 4000 1000 4000
+Connection ~ 1000 4000
+Wire Wire Line
+	2100 3500 2100 3450
+Connection ~ 2100 3450
 $EndSCHEMATC

@@ -29,6 +29,7 @@ _helpers__read_pin:
 
 
 _helpers__set_pin_high:
+	@ start address of pin data block.
 	pop {r0}
 
 	push {lr}
@@ -45,6 +46,7 @@ _helpers__set_pin_high:
 
 
 _helpers__set_pin_low:
+	@ start address of pin data block.
 	pop {r0}
 
 	push {lr}
@@ -176,7 +178,7 @@ _helpers__reset_auto_power_off:
 	push {lr}
 
 	ldr r0, =AUTO_POWER_OFF_TIME_REGISTER
-	movs r1, #6 @ Number of seconds.
+	ldr r1, =AUTO_POWER_OFF_TIME_SECONDS
 	str r1, [r0]
 
 	pop {pc}

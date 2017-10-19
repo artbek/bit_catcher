@@ -29,5 +29,4 @@ _systick_handler:
 	pop {pc}
 
 
-.equ AUTO_POWER_OFF_TIME_REGISTER, SRAM
 

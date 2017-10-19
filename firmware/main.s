@@ -8,9 +8,11 @@
 .include "vector_table.s"
 .include "mappings.s"
 .include "STM32L031x6.s"
+.include "constants.s"
 
 .include "interrupt_handlers.s"
 .include "macros.s"
+.include "display.s"
 
 
 _start:
@@ -19,7 +21,6 @@ _start:
 
 	ldr r1, =0x0001ffff
 	push {r1}; bl _helpers__delay
-
 
 
 	@ Enable GPIO clocks...
@@ -41,8 +42,7 @@ _start:
 
 	bl _helpers__select_clock_speed
 	bl _helpers__enable_systic
-
-	//bl _helpers__mco_enable
+	@ bl _helpers__mco_enable
 
 
 	@ Init DISPLAY outputs...
@@ -61,13 +61,19 @@ _start:
 	macros__init_pin ROW_6
 	macros__init_pin ROW_7
 
-	ldr r0, =ROW_1; push {r0}; bl _helpers__set_pin_low
-	ldr r0, =ROW_2; push {r0}; bl _helpers__set_pin_low
-	ldr r0, =ROW_3; push {r0}; bl _helpers__set_pin_low
-	ldr r0, =ROW_4; push {r0}; bl _helpers__set_pin_low
-	ldr r0, =ROW_5; push {r0}; bl _helpers__set_pin_low
-	ldr r0, =ROW_6; push {r0}; bl _helpers__set_pin_low
-	ldr r0, =ROW_7; push {r0}; bl _helpers__set_pin_low
+	@ldr r0, =COL_1; push {r0}; bl _helpers__set_pin_high
+	@ldr r0, =COL_2; push {r0}; bl _helpers__set_pin_high
+	@ldr r0, =COL_3; push {r0}; bl _helpers__set_pin_high
+	@ldr r0, =COL_4; push {r0}; bl _helpers__set_pin_high
+	@ldr r0, =COL_5; push {r0}; bl _helpers__set_pin_high
+
+	bl _display__clear
+
+
+	@ DISPLAY
+
+	@bl _display__clear
+	bl _display__init
 
 
 	@ Init LEFT/RIGHT buttons...
@@ -100,8 +106,9 @@ _start:
 
 
 _loop:
-	//bl  flush_display
-	//bl  update_display
+	@ DISPLAY
+
+	bl _display__flush
 
 
 	@ LEFT/RIGHT pressed...
@@ -148,82 +155,7 @@ _after_action_on:
 
 _moveon:
 
-	@ LOOP
-
-	movs r0, #5
-
-	_next:
-
-		push {r0}
-
-		movs r1, r0
-		subs r1, #1
-		movs r2, #24
-		muls r1, r2
-
-		ldr r3, =COL_1
-		adds r3, r1
-		push {r3}
-		bl _helpers__set_pin_low
-
-		ldr r1, =0x00006fff
-		push {r1}; bl _helpers__delay
-
-	ldr r0, =BTN_ONOFF
-	push {r0}
-	bl _helpers__read_pin
-	bcc _moveon_next
-	bl _helpers__go_to_sleep
-
-_moveon_next:
-
-		pop {r0}
-		subs r0, #1
-
-	@ ON/OFF pressed...
-
-
-		bne _next
-
-
-	movs r0, #5
-
-	_next2:
-
-		push {r0}
-
-		movs r1, r0
-		subs r1, #1
-		movs r2, #24
-		muls r1, r2
-
-		ldr r3, =COL_1
-		adds r3, r1
-		push {r3}
-		bl _helpers__set_pin_high
-
-		ldr r1, =0x00006fff
-		push {r1}; bl _helpers__delay
-
-	ldr r0, =BTN_ONOFF
-	push {r0}
-	bl _helpers__read_pin
-	bcc _moveon_next2
-	bl _helpers__go_to_sleep
-
-_moveon_next2:
-
-		pop {r0}
-		subs r0, #1
-
-	@ ON/OFF pressed...
-
-
-		bne _next2
-
-
 	b   _loop
 
 
 .include "helpers.s"
-

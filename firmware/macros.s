@@ -6,7 +6,7 @@
 
 	ldr r0, =\PIN_LABEL
 	push {r0}
-	bl _helpers__set_pin_high
+	bl _helpers__set_pin_low
 
 .endm
 

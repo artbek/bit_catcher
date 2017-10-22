@@ -3,7 +3,8 @@ _nmi_handler:
 	bx lr
 
 _hard_fault_handler:
-	movs r6, #121
+	ldr r0, =COL_DECIMAL; push {r0}; bl _helpers__set_pin_high
+	ldr r0, =ROW_7; push {r0}; bl _helpers__set_pin_low
 	bx lr
 
 _svcall_handler:

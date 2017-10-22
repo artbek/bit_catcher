@@ -190,11 +190,11 @@ _helpers__enable_systic:
 	bl _helpers__reset_auto_power_off
 
 	ldr r0, =STK_RVR
-	ldr r1, =0xf4240 // Set reload value.
+	ldr r1, =1000000 // Set reload value.
 	str r1, [r0]
 
 	ldr r0, =STK_CVR
-	ldr r1, =0xf4240 // Set counter value.
+	ldr r1, =1000000 // Set counter value.
 	str r1, [r0]
 
 	ldr r0, =STK_CSR

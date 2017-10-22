@@ -19,6 +19,7 @@
 .equ RCC_IOPENR, RCC + 0x2C
 .equ RCC_CFGR, RCC + 0x0C
 .equ RCC_APB1ENR, RCC + 0x38
+.equ RCC_APB2ENR, RCC + 0x34
 .equ RCC_ICSCR, RCC + 0x04
 
 @================================================@
@@ -49,4 +50,13 @@
 .equ STK_CALIB, 0xE000E01C
 
 .equ ICSR, 0xE000ED04 // Interrupt Control and State Register
+
+@================================================@
+
+.equ TIM21, 0X40010800
+.equ TIM21_CR1, TIM21 + 0x00
+.equ TIM21_EGR, TIM21 + 0x14
+.equ TIM21_CNT, TIM21 + 0x24
+.equ TIM21_PSC, TIM21 + 0x28
+.equ TIM21_ARR, TIM21 + 0x2C
 

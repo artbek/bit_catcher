@@ -1,3 +1,13 @@
+.macro macros__register_bit_sr REGISTER_CONST BIT_NUMBER SET_RESET
+
+	ldr r0, =\REGISTER_CONST
+	movs r1, \BIT_NUMBER
+	movs r2, \SET_RESET
+	push {r0, r1, r2}; bl _helpers__sr_bit
+
+.endm
+
+
 .macro macros__init_pin PIN_LABEL
 
 	ldr r0, =\PIN_LABEL

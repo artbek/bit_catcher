@@ -9,18 +9,39 @@
 .include "STM32L031x6.s"
 .include "mappings.s"
 .include "constants.s"
+.include "macros.s"
 
 .include "interrupt_handlers.s"
 
 .pool @ Literal Pools have limited range and LDR may fail.
 
-.include "macros.s"
 .include "display.s"
 
 .pool @ Literal Pools have limited range and LDR may fail.
 
+CURSOR_REG .req R8
+GAME_STATE_REG .req R10
 
 _start:
+
+	@ Unlock EEPROM for writing:
+	ldr r0, =FLASH_PEKEYR
+	ldr r1, =PEKEY1
+	ldr r2, =PEKEY2
+	str r1, [r0]
+	nop
+	str r2, [r0]
+	nop
+
+	@ Write to EEPROM:
+	ldr r0, =EEPROM
+	ldr r1, [r0]
+	ldr r2, =0b10101000000000001001111100111000
+	str r2, [r0]
+
+	@ Lock EEPROM for writing:
+	macros__register_bit_sr FLASH_PECR 0 1
+
 
 	@ A small idle delay, just because...
 
@@ -46,8 +67,9 @@ _start:
 	@ CORE STUFF...
 
 	bl _helpers__select_clock_speed
-	bl _helpers__enable_systic
+	bl _helpers__enable_systick
 	@ bl _helpers__mco_enable
+
 
 
 	@ Init DISPLAY outputs...
@@ -111,30 +133,25 @@ _start:
 
 	@ init scroll
 	movs r0, 0
-	mov r8, r0
-	movs r7, 5
-	movs r6, 1
-	push {r6, r7}
+	mov CURSOR_REG, r0
 
 	@ init game state
-	ldr r0, =GAME_STATE
 	movs r1, 1
-	str r1, [r0]
+	mov GAME_STATE_REG, r1
 
 
 	@ TIM21
 	macros__register_bit_sr RCC_APB2ENR 2 1 @ Enable clock for TIM21.
 
-	ldr r0, =TIM21_ARR
-	ldr r1, =52 @ ARR
-	str r1, [r0]
-
-	ldr r0, =TIM21_PSC
-	ldr r1, =0x8fff @ Prescaler.
-	str r1, [r0]
+	macros__register_value TIM21_ARR 50 @ ARR.
+	macros__register_value TIM21_PSC 10000 @ Prescaler.
 
 	macros__register_bit_sr TIM21_CR1 6 1 @ Center-aligned mode.
 	macros__register_bit_sr TIM21_CR1 5 1 @ Center-aligned mode.
+
+	macros__register_bit_sr NVIC_ISER 20 1 @ Interrupt Enable.
+	macros__register_bit_sr TIM21_DIER 0 1 @ UIE (Update Interrupt Enable)
+
 	macros__register_bit_sr TIM21_CR1 0 1 @ CEN (Clock Enable).
 
 
@@ -143,61 +160,24 @@ _loop:
 
 	bl _display__flush
 
-	ldr r0, =GAME_STATE
-	ldr r1, [r0]
+	mov r1, GAME_STATE_REG
 	cmp r1, 0
 	beq _game_state_0
 	cmp r1, 1
 	beq _game_state_1
+	b _break
+
 
 	_game_state_0:
-		pop {r6, r7}
-		subs r7, 1
-		bne _dont_move_cursor
-			movs r7, 10
-			add r8, r6
-			movs r0, 27
-			cmp r8, r0
-			bge _direction_back
-			movs r0, 0
-			cmp r8, r0
-			ble _direction_forward
-			bgt _dont_move_cursor
-
-			_direction_back:
-				movs r6, 0
-				subs r6, 1
-				b _dont_move_cursor
-			_direction_forward:
-				movs r6, 1
-				b _dont_move_cursor
-
-		_dont_move_cursor:
-		push {r6, r7}
+		@ scroll left-right
+		ldr r0, =TIM21_CNT
+		ldr r0, [r0]
+		mov CURSOR_REG, r0
+		adds r0, r0
 		b _break
 
 	_game_state_1:
 		@ scroll down
-		ldr r0, =TIM21_CNT
-		ldr r0, [r0]
-		lsrs r0, 1
-		mov r8, r0
-		adds r0, r0
-		b _break
-
-	_game_state_2:
-		@ scroll down
-		ldr r0, =TIM21_CNT
-		ldr r0, [r0]
-		adds r0, r0
-		bne _dont_shift_yet
-			bl _display__shift_down
-			@ add new row
-
-			@ Re-initialise the counter by setting the UG (Update Generation) bit
-			macros__register_bit_sr TIM21_EGR 0 1
-
-		_dont_shift_yet:
 
 		b _break
 

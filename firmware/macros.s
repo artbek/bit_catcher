@@ -1,9 +1,22 @@
 .macro macros__register_bit_sr REGISTER_CONST BIT_NUMBER SET_RESET
 
+	push {r0-r7}
+
 	ldr r0, =\REGISTER_CONST
 	movs r1, \BIT_NUMBER
 	movs r2, \SET_RESET
 	push {r0, r1, r2}; bl _helpers__sr_bit
+
+	pop {r0-r7}
+
+.endm
+
+
+.macro macros__register_value REGISTER_CONST REGISER_VALUE
+
+	ldr r0, =\REGISTER_CONST
+	ldr r1, =\REGISER_VALUE
+	str r1, [r0]
 
 .endm
 

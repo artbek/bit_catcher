@@ -15,18 +15,30 @@ _display__shift_down:
 	pop {pc}
 
 
+_display__generate_new_row_at_first_address:
+	push {lr}
+
+	ldr r1, =EEPROM
+	ldr r0, [r1]
+	//ldr r0, =0xffffffff
+	ldr r3, =DISPLAY_BUFFER_FIRST_ADDR
+	str r0, [r3]
+
+	pop {pc}
+
+
 _display__init:
 	push {lr}
 
 	ldr r0, =DISPLAY_BUFFER_FIRST_ADDR
 
-	.equ DISPLAY_BUFFER_ROW_1, 0b01110001110000001001111100111000
-	.equ DISPLAY_BUFFER_ROW_2, 0b10001010001000011000000101000100
-	.equ DISPLAY_BUFFER_ROW_3, 0b00001000001000101000001001001100
-	.equ DISPLAY_BUFFER_ROW_4, 0b00010000110001001000010001010100
-	.equ DISPLAY_BUFFER_ROW_5, 0b00100000001001111100100001100100
-	.equ DISPLAY_BUFFER_ROW_6, 0b01000010001000001000100001000100
-	.equ DISPLAY_BUFFER_ROW_7, 0b11111001110000001000100000111000
+	.equ DISPLAY_BUFFER_ROW_1, 0b01110000000000001001111100111000
+	.equ DISPLAY_BUFFER_ROW_2, 0b10001000000000011000000101000100
+	.equ DISPLAY_BUFFER_ROW_3, 0b00001000000000101000001001001100
+	.equ DISPLAY_BUFFER_ROW_4, 0b00010000000001001000010001010100
+	.equ DISPLAY_BUFFER_ROW_5, 0b00100000000001111100100001100100
+	.equ DISPLAY_BUFFER_ROW_6, 0b01000000000000001000100001000100
+	.equ DISPLAY_BUFFER_ROW_7, 0b11111000000000001000100000111000
 
 	adds r0, 0
 	ldr r1, =DISPLAY_BUFFER_ROW_1
@@ -62,9 +74,11 @@ _display__init:
 _display__flush:
 	push {lr}
 
+	CURSOR_REG .req R8
+
 	ldr r2, =COL_1
 	movs r3, 1 @ Column index.
-	add r3, r8
+	add r3, CURSOR_REG
 
 	_col:
 		ldr r0, =DISPLAY_BUFFER_FIRST_ADDR
@@ -106,7 +120,6 @@ _display__flush:
 
 		push {r0-r3} @ Save current row addr and current row data addr.
 		push {r2}; bl _helpers__set_pin_low @ Column OFF.
-		bl _display__clear
 		pop {r0-r3} @ Load current row addr and current row data addr.
 
 		adds r2, 24 @ Next colum data address. 6 words.

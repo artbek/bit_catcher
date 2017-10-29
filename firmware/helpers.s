@@ -7,6 +7,7 @@ _helpers__init_pin:
 
 	macros__update_2_bit_register MODER_OFFSET r2 r3
 	macros__update_2_bit_register PUPDR_OFFSET r4 r5
+	macros__update_2_bit_register OSPEEDR_OFFSET r4 r4
 
 	pop {pc}
 
@@ -35,7 +36,7 @@ _helpers__set_pin_high:
 	push {lr}
 
 	ldm r0, {r0-r1}
-	ldr r2, =ODR_OFFSET
+	ldr r2, =BSRR_OFFSET
 	adds r0, r2
 	movs r2, #1 @ set
 
@@ -52,9 +53,10 @@ _helpers__set_pin_low:
 	push {lr}
 
 	ldm r0, {r0-r1}
-	ldr r2, =ODR_OFFSET
+	ldr r2, =BSRR_OFFSET
+	adds r2, 16
 	adds r0, r2
-	movs r2, #0 @ clear
+	movs r2, #1 @ reset
 
 	push {r0, r1, r2}
 	bl _helpers__sr_bit
@@ -184,7 +186,7 @@ _helpers__reset_auto_power_off:
 	pop {pc}
 
 
-_helpers__enable_systic:
+_helpers__enable_systick:
 	push {lr}
 
 	bl _helpers__reset_auto_power_off

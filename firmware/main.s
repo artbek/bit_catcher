@@ -16,41 +16,30 @@
 .pool @ Literal Pools have limited range and LDR may fail.
 
 .include "display.s"
+.include "game.s"
 
 .pool @ Literal Pools have limited range and LDR may fail.
 
-CURSOR_REG .req R8
-GAME_STATE_REG .req R10
 
 _start:
 
-	@ Unlock EEPROM for writing:
-	ldr r0, =FLASH_PEKEYR
-	ldr r1, =PEKEY1
-	ldr r2, =PEKEY2
-	str r1, [r0]
-	nop
-	str r2, [r0]
-	nop
-
-	@ Write to EEPROM:
-	ldr r0, =EEPROM
-	ldr r1, [r0]
-	ldr r2, =0b10101000000000001001111100111000
-	str r2, [r0]
-
-	@ Lock EEPROM for writing:
-	macros__register_bit_sr FLASH_PECR 0 1
-
-
-	@ A small idle delay, just because...
-
-	ldr r1, =0x0001ffff
+	@ ON/OFF switch bounce.
+	ldr r1, =0x0002ffff
 	push {r1}; bl _helpers__delay
 
+	@ MPU + SysTick...
+	bl _helpers__select_clock_speed
+	bl _helpers__enable_systick
+	@ bl _helpers__mco_enable
+
+	@ TIM21 timer...
+	macros__register_bit_sr RCC_APB2ENR 2 1 @ Enable clock for TIM21.
+	macros__register_bit_sr TIM21_CR1 6 1 @ Center-aligned mode.
+	macros__register_bit_sr TIM21_CR1 5 1 @ Center-aligned mode.
+	macros__register_bit_sr TIM21_DIER 0 1 @ UIE (Update Interrupt Enable)
+	macros__register_bit_sr NVIC_ISER 20 1 @ Interrupt Enable.
 
 	@ Enable GPIO clocks...
-
 	ldr   r0, =RCC_IOPENR
 	movs  r1, #0 @ IOPAEN (PORT A)
 	movs  r2, #1 @ set
@@ -62,14 +51,6 @@ _start:
 	movs  r2, #1 @ set
 	push {r0, r1, r2}
 	bl    _helpers__sr_bit
-
-
-	@ CORE STUFF...
-
-	bl _helpers__select_clock_speed
-	bl _helpers__enable_systick
-	@ bl _helpers__mco_enable
-
 
 
 	@ Init DISPLAY outputs...
@@ -88,19 +69,6 @@ _start:
 	macros__init_pin ROW_5
 	macros__init_pin ROW_6
 	macros__init_pin ROW_7
-
-	@ldr r0, =COL_1; push {r0}; bl _helpers__set_pin_high
-	@ldr r0, =COL_2; push {r0}; bl _helpers__set_pin_high
-	@ldr r0, =COL_3; push {r0}; bl _helpers__set_pin_high
-	@ldr r0, =COL_4; push {r0}; bl _helpers__set_pin_high
-	@ldr r0, =COL_5; push {r0}; bl _helpers__set_pin_high
-
-	bl _display__clear
-
-
-	@ DISPLAY
-
-	bl _display__init
 
 
 	@ Init LEFT/RIGHT buttons...
@@ -131,93 +99,114 @@ _start:
 	movs  r2, #1 @ set
 	push {r0, r1, r2}; bl _helpers__sr_bit
 
-	@ init scroll
-	movs r0, 0
-	mov CURSOR_REG, r0
 
-	@ init game state
-	movs r1, 1
-	mov GAME_STATE_REG, r1
+	@ Init game ...
+	bl _game__stage_0_init
 
 
-	@ TIM21
-	macros__register_bit_sr RCC_APB2ENR 2 1 @ Enable clock for TIM21.
-
-	macros__register_value TIM21_ARR 50 @ ARR.
-	macros__register_value TIM21_PSC 10000 @ Prescaler.
-
-	macros__register_bit_sr TIM21_CR1 6 1 @ Center-aligned mode.
-	macros__register_bit_sr TIM21_CR1 5 1 @ Center-aligned mode.
-
-	macros__register_bit_sr NVIC_ISER 20 1 @ Interrupt Enable.
-	macros__register_bit_sr TIM21_DIER 0 1 @ UIE (Update Interrupt Enable)
-
-	macros__register_bit_sr TIM21_CR1 0 1 @ CEN (Clock Enable).
-
+b _loop
+	.pool @ Literal Pools have limited range and LDR may fail.
 
 _loop:
-	@ DISPLAY
 
 	bl _display__flush
 
-	mov r1, GAME_STATE_REG
-	cmp r1, 0
-	beq _game_state_0
-	cmp r1, 1
-	beq _game_state_1
+
+	ldr r1, =GAME_STAGE
+	ldr r1, [r1]
+	cmp r1, 0; beq _game_stage_0
+	cmp r1, 1; beq _game_stage_1
+	cmp r1, 2; beq _game_stage_2
 	b _break
 
+	@ ============================= @
 
-	_game_state_0:
-		@ scroll left-right
+	_game_stage_0:
+
+		@ Display:
 		ldr r0, =TIM21_CNT
 		ldr r0, [r0]
-		mov CURSOR_REG, r0
+		ldr r1, =DISPLAY_BUFFER_CURSOR
+		str r0, [r1]
 		adds r0, r0
+
+		ldr r0, =BUTTON_PROCESSING_LOCKED
+		ldr r1, [r0]
+		adds r1, r1
+		bne _break
+
+		@ Inputs:
+		ldr r0, =BTN_L
+		push {r0}
+		bl _helpers__read_pin
+		bcs _break
+			macros__register_value BUTTON_PROCESSING_LOCKED 1
+			bl _helpers__reset_auto_power_off
+			bl _game__stage_1_init
+
 		b _break
 
-	_game_state_1:
-		@ scroll down
+
+	@ ============================= @
+
+	_game_stage_1:
+
+		@ Display:
+		bl _game__add_tray_to_display_buffer
+
+		mov r0, r10 @ Tray shape.
+		mov r1, r11 @ Display bottom row.
+		cmp r1, 0
+		beq _ignore_score_checks
+			ands r0, r1
+			beq _game_over
+				bl _game__score_increase
+				macros__register_value DISPLAY_BUFFER_LAST_ADDR 0 @ 1 point at a time.
+				b _ignore_score_checks
+			_game_over:
+				bl _game__stage_2_init
+				b _break
+
+		_ignore_score_checks:
+
+		@ Inputs:
+		bl _game__process_lr_buttons
 
 		b _break
+
+	@ ============================= @
+
+	_game_stage_2:
+
+		@ Display:
+		ldr r0, =TIM21_CNT
+		ldr r0, [r0]
+		ldr r1, =DISPLAY_BUFFER_CURSOR
+		str r0, [r1]
+		adds r0, r0
+
+		@ Inputs:
+		ldr r0, =BTN_L
+		push {r0}
+		bl _helpers__read_pin
+		bcs _break
+			macros__register_value BUTTON_PROCESSING_LOCKED 1
+			bl _helpers__reset_auto_power_off
+			bl _game__stage_0_init
+
+		b _break
+
+	@ ============================= @
 
 
 	_break:
 
-
-
-	@ LEFT/RIGHT pressed...
-
 	ldr r0, =BTN_L
 	push {r0}
 	bl _helpers__read_pin
-	bcc _action_off
-	b _after_action_off
-
-_action_off:
-	ldr r0, =ROW_7
-	push {r0}
-	bl _helpers__set_pin_low
-	bl _helpers__reset_auto_power_off
-	b _after_action_off
-
-_after_action_off:
-
-
-	ldr r0, =BTN_R
-	push {r0}
-	bl _helpers__read_pin
-	bcc _action_on
-	b _after_action_on
-
-_action_on:
-	ldr r0, =ROW_7
-	push {r0}
-	bl _helpers__set_pin_high
-	bl _helpers__reset_auto_power_off
-	b _after_action_on
-
-_after_action_on:
+	bcc _dont_unlock_yet
+		macros__register_value BUTTON_PROCESSING_LOCKED 0
+	_dont_unlock_yet:
 
 
 	@ ON/OFF pressed...
@@ -225,12 +214,12 @@ _after_action_on:
 	ldr r0, =BTN_ONOFF
 	push {r0}
 	bl _helpers__read_pin
-	bcc _moveon
-	bl _helpers__go_to_sleep
+	bcc _keep_running
+		bl _helpers__go_to_sleep
+	_keep_running:
 
-_moveon:
 
-	b   _loop
+b _loop
 
 
 .include "helpers.s"

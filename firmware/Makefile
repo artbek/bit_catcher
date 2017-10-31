@@ -27,6 +27,11 @@ main.bin: main.elf
 flash:
 	$(JLINK_EXE) $(JLINK_OPTIONS) -commanderscript flash.jlink
 
+eeprom:
+	bash build_eeprom_jlink_script.sh > eeprom.jlink.tmp
+	$(JLINK_EXE) $(JLINK_OPTIONS) -commanderscript eeprom.jlink.tmp
+	rm eeprom.jlink.tmp
+
 clean:
 	rm -f main.elf main.o main.bin
 

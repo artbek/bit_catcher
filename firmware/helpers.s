@@ -1,21 +1,20 @@
 _helpers__init_pin:
 	pop {r0}
 
-	push {lr}
+	push {r0-r7, lr}
 
 	ldm r0, {r0-r5}
 
 	macros__update_2_bit_register MODER_OFFSET r2 r3
 	macros__update_2_bit_register PUPDR_OFFSET r4 r5
-	macros__update_2_bit_register OSPEEDR_OFFSET r4 r4
 
-	pop {pc}
+	pop {r0-r7, pc}
 
 
 _helpers__read_pin:
 	pop {r0}
 
-	push {lr}
+	push {r0-r7, lr}
 
 	ldm r0, {r0-r5}
 
@@ -26,14 +25,14 @@ _helpers__read_pin:
 	adds r1, #1
 	lsrs r5, r1
 
-	pop {pc}
+	pop {r0-r7, pc}
 
 
 _helpers__set_pin_high:
 	@ start address of pin data block.
 	pop {r0}
 
-	push {lr}
+	push {r0-r7, lr}
 
 	ldm r0, {r0-r1}
 	ldr r2, =BSRR_OFFSET
@@ -43,14 +42,14 @@ _helpers__set_pin_high:
 	push {r0, r1, r2}
 	bl _helpers__sr_bit
 
-	pop {pc}
+	pop {r0-r7, pc}
 
 
 _helpers__set_pin_low:
 	@ start address of pin data block.
 	pop {r0}
 
-	push {lr}
+	push {r0-r7, lr}
 
 	ldm r0, {r0-r1}
 	ldr r2, =BSRR_OFFSET
@@ -61,7 +60,7 @@ _helpers__set_pin_low:
 	push {r0, r1, r2}
 	bl _helpers__sr_bit
 
-	pop {pc}
+	pop {r0-r7, pc}
 
 
 _helpers__sr_bit:
@@ -70,7 +69,7 @@ _helpers__sr_bit:
 	@ bit value
 	pop {r0, r1, r2}
 
-	push {lr}
+	push {r0-r7, lr}
 
 	@ create bitmask
 	movs r3, #1
@@ -86,28 +85,30 @@ _helpers__sr_bit:
 	_clear_bit:
 		bics r5, r3
 		str r5, [r0]
-		pop {pc}
+		pop {r0-r7, pc}
 
 	_set_bit:
 		orrs r5, r3
 		str r5, [r0]
-		pop {pc}
+		pop {r0-r7, pc}
 
 
 _helpers__delay:
 	@ R0 - delay value
 
 	pop {r0}
-	push {lr}
+	push {r0-r7, lr}
 
 	_local_delay:
 		subs r0, #1
 		bne _local_delay
 
-	pop {pc}
+	pop {r0-r7, pc}
 
 
 _helpers__go_to_sleep:
+	push {r0-r7, lr}
+
 	ldr r0, =PWR_CR
 	movs r1, #2 @ CWUF: Clear WUF (Wakeup flag)
 	movs r2, #1 @ set
@@ -117,11 +118,11 @@ _helpers__go_to_sleep:
 	sev; wfe @ Reset the event flag.
 	wfe @ Go to sleep.
 
-	bx lr
+	pop {r0-r7, pc}
 
 
 _helpers__select_clock_speed:
-	push {lr}
+	push {r0-r7, lr}
 
 	@ 000: range 0 around 65.536 kHz
 	@ 001: range 1 around 131.072 kHz
@@ -147,11 +148,12 @@ _helpers__select_clock_speed:
 	push {r0, r1, r2}
   bl _helpers__sr_bit
 
-	pop {pc}
+	pop {r0-r7, pc}
 
 
 _helpers__mco_enable:
 	push {lr}
+	push {r0-r7, lr}
 
   @ Set PA9 to MCO (alternate function)...
 
@@ -174,20 +176,21 @@ _helpers__mco_enable:
 	push {r0, r1, r2}
   bl _helpers__sr_bit
 
-	pop {pc}
+	pop {r0-r7, pc}
+
 
 _helpers__reset_auto_power_off:
-	push {lr}
+	push {r0-r7, lr}
 
 	ldr r0, =AUTO_POWER_OFF_TIME_REGISTER
 	ldr r1, =AUTO_POWER_OFF_TIME_SECONDS
 	str r1, [r0]
 
-	pop {pc}
+	pop {r0-r7, pc}
 
 
 _helpers__enable_systick:
-	push {lr}
+	push {r0-r7, lr}
 
 	bl _helpers__reset_auto_power_off
 
@@ -217,5 +220,21 @@ _helpers__enable_systick:
 	push {r0, r1, r2}
 	bl _helpers__sr_bit
 
-	pop {pc}
+	pop {r0-r7, pc}
+
+
+_helpers__eeprom:
+	push {r0-r7, lr}
+
+	@ Unlock EEPROM:
+	ldr r0, =FLASH_PEKEYR
+	ldr r1, =PEKEY1
+	str r1, [r0]
+	ldr r1, =PEKEY2
+	str r1, [r0]
+
+	@ Lock EEPROM:
+	macros__register_bit_sr FLASH_PECR 0 1
+
+	pop {r0-r7, pc}
 

@@ -1,42 +1,61 @@
-_display__shift_down:
-	push {lr}
+_display__init_blank:
+	push {r0-r7, lr}
 
-	ldr r0, =DISPLAY_BUFFER_LAST_ADDR
-	ldr r3, =DISPLAY_BUFFER_FIRST_ADDR
+	ldr r0, =DISPLAY_BUFFER_FIRST_ADDR
 
-	_keep_shifing:
-		mov r1, r0
-		subs r0, 4
-		ldr r5, [r0]
-		str r5, [r1]
-		cmp r0, r3
-	bge	_keep_shifing
+	.equ DISPLAY_BUFFER_ROW_1, 0b00000000000000000000000000000000
+	.equ DISPLAY_BUFFER_ROW_2, 0b00000000000000000000000000000000
+	.equ DISPLAY_BUFFER_ROW_3, 0b00000000000000000000000000000000
+	.equ DISPLAY_BUFFER_ROW_4, 0b00000000000000000000000000000000
+	.equ DISPLAY_BUFFER_ROW_5, 0b00000000000000000000000000000000
+	.equ DISPLAY_BUFFER_ROW_6, 0b00000000000000000000000000000000
+	.equ DISPLAY_BUFFER_ROW_7, 0b00000000000000000000000000000000
 
-	pop {pc}
+	adds r0, 0
+	ldr r1, =DISPLAY_BUFFER_ROW_1
+	str r1, [r0]
 
+	adds r0, 4
+	ldr r1, =DISPLAY_BUFFER_ROW_2
+	str r1, [r0]
 
-_display__generate_new_row_at_first_address:
-	push {lr}
+	adds r0, 4
+	ldr r1, =DISPLAY_BUFFER_ROW_3
+	str r1, [r0]
 
-	ldr r1, =EEPROM
-	ldr r0, [r1]
-	//ldr r0, =0xffffffff
-	ldr r3, =DISPLAY_BUFFER_FIRST_ADDR
-	str r0, [r3]
+	adds r0, 4
+	ldr r1, =DISPLAY_BUFFER_ROW_4
+	str r1, [r0]
 
-	pop {pc}
+	adds r0, 4
+	ldr r1, =DISPLAY_BUFFER_ROW_5
+	str r1, [r0]
+
+	adds r0, 4
+	ldr r1, =DISPLAY_BUFFER_ROW_6
+	str r1, [r0]
+
+	adds r0, 4
+	ldr r1, =DISPLAY_BUFFER_ROW_7
+	str r1, [r0]
+
+	macros__register_value DISPLAY_BUFFER_CURSOR 0
+
+	pop {r0-r7, pc}
 
 
 _display__init:
-	push {lr}
+	push {r0-r7, lr}
+
+	macros__register_value DISPLAY_BUFFER_CURSOR 0
 
 	ldr r0, =DISPLAY_BUFFER_FIRST_ADDR
 
 	.equ DISPLAY_BUFFER_ROW_1, 0b01110000000000001001111100111000
 	.equ DISPLAY_BUFFER_ROW_2, 0b10001000000000011000000101000100
-	.equ DISPLAY_BUFFER_ROW_3, 0b00001000000000101000001001001100
-	.equ DISPLAY_BUFFER_ROW_4, 0b00010000000001001000010001010100
-	.equ DISPLAY_BUFFER_ROW_5, 0b00100000000001111100100001100100
+	.equ DISPLAY_BUFFER_ROW_3, 0b00001000010000101000001001001100
+	.equ DISPLAY_BUFFER_ROW_4, 0b00010001110001001000010001010100
+	.equ DISPLAY_BUFFER_ROW_5, 0b00100000010001111100100001100100
 	.equ DISPLAY_BUFFER_ROW_6, 0b01000000000000001000100001000100
 	.equ DISPLAY_BUFFER_ROW_7, 0b11111000000000001000100000111000
 
@@ -68,17 +87,18 @@ _display__init:
 	ldr r1, =DISPLAY_BUFFER_ROW_7
 	str r1, [r0]
 
-	pop {pc}
+	pop {r0-r7, pc}
 
 
 _display__flush:
-	push {lr}
-
-	CURSOR_REG .req R8
+	push {r0-r7, lr}
 
 	ldr r2, =COL_1
 	movs r3, 1 @ Column index.
-	add r3, CURSOR_REG
+
+	ldr r4, =DISPLAY_BUFFER_CURSOR
+	ldr r4, [r4]
+	adds r3, r4 @ Cursor-X.
 
 	_col:
 		ldr r0, =DISPLAY_BUFFER_FIRST_ADDR
@@ -128,19 +148,25 @@ _display__flush:
 		cmp r2, r4
 	ble _col
 
-	pop {pc}
+	pop {r0-r7, pc}
 
 
-_display__clear:
-	push {lr}
+_display__shift_down:
+	push {r0-r7, lr}
 
-	ldr r0, =ROW_1; push {r0}; bl _helpers__set_pin_high
-	ldr r0, =ROW_2; push {r0}; bl _helpers__set_pin_high
-	ldr r0, =ROW_3; push {r0}; bl _helpers__set_pin_high
-	ldr r0, =ROW_4; push {r0}; bl _helpers__set_pin_high
-	ldr r0, =ROW_5; push {r0}; bl _helpers__set_pin_high
-	ldr r0, =ROW_6; push {r0}; bl _helpers__set_pin_high
-	ldr r0, =ROW_7; push {r0}; bl _helpers__set_pin_high
+	ldr r3, =DISPLAY_BUFFER_FIRST_ADDR
+	ldr r0, =DISPLAY_BUFFER_LAST_ADDR
 
-	pop {pc}
+	_keep_shifing:
+		mov r1, r0
+		subs r0, 4
+		ldr r5, [r0]
+		str r5, [r1]
+		cmp r0, r3
+	bgt	_keep_shifing
+
+	movs r0, 0
+	str r0, [r3] @ Clear the first row.
+
+	pop {r0-r7, pc}
 

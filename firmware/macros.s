@@ -34,6 +34,19 @@
 .endm
 
 
+.macro macros__init_row_pin PIN_LABEL
+
+	ldr r0, =\PIN_LABEL
+	push {r0}
+	bl _helpers__init_pin
+
+	ldr r0, =\PIN_LABEL
+	push {r0}
+	bl _helpers__set_pin_high
+
+.endm
+
+
 .macro macros__update_2_bit_register M_OFFSET HIGH_BIT_REG LOW_BIT_REG
 
 	push {r0-r5}

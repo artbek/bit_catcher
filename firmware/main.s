@@ -27,17 +27,6 @@ _start:
 	ldr r1, =0x0002ffff
 	push {r1}; bl _helpers__delay
 
-	@ MPU + SysTick...
-	bl _helpers__select_clock_speed
-	bl _helpers__enable_systick
-	@ bl _helpers__mco_enable
-
-	@ TIM21 timer...
-	macros__register_bit_sr RCC_APB2ENR 2 1 @ Enable clock for TIM21.
-	macros__register_bit_sr TIM21_CR1 6 1 @ Center-aligned mode.
-	macros__register_bit_sr TIM21_CR1 5 1 @ Center-aligned mode.
-	macros__register_bit_sr TIM21_DIER 0 1 @ UIE (Update Interrupt Enable)
-	macros__register_bit_sr NVIC_ISER 20 1 @ Interrupt Enable.
 
 	@ Enable GPIO clocks...
 	ldr   r0, =RCC_IOPENR
@@ -52,8 +41,33 @@ _start:
 	push {r0, r1, r2}
 	bl    _helpers__sr_bit
 
+	macros__register_value GPIOA_OSPEEDR 0xffffffff
+
+
+	@ SYSCLK + SysTick...
+	bl _helpers__sysclk
+	bl _helpers__mco_enable
+	bl _helpers__enable_systick
+
+
+	@ TIM21 timer...
+	macros__register_bit_sr RCC_APB2ENR 2 1 @ Enable clock for TIM21.
+	macros__register_bit_sr TIM21_CR1 6 1 @ Center-aligned mode.
+	macros__register_bit_sr TIM21_CR1 5 1 @ Center-aligned mode.
+	macros__register_bit_sr TIM21_DIER 0 1 @ UIE (Update Interrupt Enable)
+	macros__register_bit_sr NVIC_ISER 20 1 @ Interrupt Enable.
+	macros__register_bit_sr TIM21_CR1 0 1 @ CEN (Clock Enable).
+
 
 	@ Init DISPLAY outputs...
+
+	macros__init_row_pin ROW_1
+	macros__init_row_pin ROW_2
+	macros__init_row_pin ROW_3
+	macros__init_row_pin ROW_4
+	macros__init_row_pin ROW_5
+	macros__init_row_pin ROW_6
+	macros__init_row_pin ROW_7
 
 	macros__init_pin COL_1
 	macros__init_pin COL_2
@@ -61,14 +75,6 @@ _start:
 	macros__init_pin COL_4
 	macros__init_pin COL_5
 	macros__init_pin COL_DECIMAL
-
-	macros__init_pin ROW_1
-	macros__init_pin ROW_2
-	macros__init_pin ROW_3
-	macros__init_pin ROW_4
-	macros__init_pin ROW_5
-	macros__init_pin ROW_6
-	macros__init_pin ROW_7
 
 
 	@ Init LEFT/RIGHT buttons...
@@ -99,9 +105,12 @@ _start:
 	movs  r2, #1 @ set
 	push {r0, r1, r2}; bl _helpers__sr_bit
 
-
 	@ Init game ...
+	bl _display__init_white
 	bl _game__stage_0_init
+
+	movs r0, 0
+	mov r12, r0
 
 
 b _loop
@@ -126,25 +135,20 @@ _loop:
 		@ Display:
 		ldr r0, =TIM21_CNT
 		ldr r0, [r0]
+		ldr r2, =GAME__STAGE0_PSC2
+		lsrs r0, r2
 		ldr r1, =DISPLAY_BUFFER_CURSOR
 		str r0, [r1]
-		adds r0, r0
-
-		ldr r0, =BUTTON_PROCESSING_LOCKED
-		ldr r1, [r0]
-		adds r1, r1
-		bne _break
 
 		@ Inputs:
 		ldr r0, =BTN_L
 		push {r0}
 		bl _helpers__read_pin
 		bcs _break
-			macros__register_value BUTTON_PROCESSING_LOCKED 1
 			bl _helpers__reset_auto_power_off
 			bl _game__stage_1_init
 
-		b _break
+	b _break
 
 
 	@ ============================= @
@@ -154,25 +158,10 @@ _loop:
 		@ Display:
 		bl _game__add_tray_to_display_buffer
 
-		mov r0, r10 @ Tray shape.
-		mov r1, r11 @ Display bottom row.
-		cmp r1, 0
-		beq _ignore_score_checks
-			ands r0, r1
-			beq _game_over
-				bl _game__score_increase
-				macros__register_value DISPLAY_BUFFER_LAST_ADDR 0 @ 1 point at a time.
-				b _ignore_score_checks
-			_game_over:
-				bl _game__stage_2_init
-				b _break
-
-		_ignore_score_checks:
-
 		@ Inputs:
 		bl _game__process_lr_buttons
 
-		b _break
+	b _break
 
 	@ ============================= @
 
@@ -181,32 +170,25 @@ _loop:
 		@ Display:
 		ldr r0, =TIM21_CNT
 		ldr r0, [r0]
+		ldr r2, =GAME__STAGE2_PSC2
+		lsrs r0, r2
 		ldr r1, =DISPLAY_BUFFER_CURSOR
 		str r0, [r1]
-		adds r0, r0
 
 		@ Inputs:
 		ldr r0, =BTN_L
 		push {r0}
 		bl _helpers__read_pin
 		bcs _break
-			macros__register_value BUTTON_PROCESSING_LOCKED 1
 			bl _helpers__reset_auto_power_off
 			bl _game__stage_0_init
 
-		b _break
+	b _break
 
 	@ ============================= @
 
 
 	_break:
-
-	ldr r0, =BTN_L
-	push {r0}
-	bl _helpers__read_pin
-	bcc _dont_unlock_yet
-		macros__register_value BUTTON_PROCESSING_LOCKED 0
-	_dont_unlock_yet:
 
 
 	@ ON/OFF pressed...
@@ -223,3 +205,6 @@ b _loop
 
 
 .include "helpers.s"
+
+b _start
+

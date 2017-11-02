@@ -20,23 +20,24 @@ main.elf: main.o
 main.bin: main.elf
 	arm-none-eabi-objcopy -S -O binary main.elf main.bin
 	@echo '=================================================='
-	arm-none-eabi-size main.elf
+	arm-none-eabi-size main.o
 	@echo '=================================================='
+
+eeprom:
+	rm -f eeprom.o eeprom.bin
+	arm-none-eabi-as -o eeprom.o eeprom.s
+	arm-none-eabi-objcopy -S -O binary eeprom.o eeprom.bin
+	$(JLINK_EXE) $(JLINK_OPTIONS) -commanderscript eeprom.jlink
 
 
 flash:
 	$(JLINK_EXE) $(JLINK_OPTIONS) -commanderscript flash.jlink
 
-eeprom:
-	bash build_eeprom_jlink_script.sh > eeprom.jlink.tmp
-	$(JLINK_EXE) $(JLINK_OPTIONS) -commanderscript eeprom.jlink.tmp
-	rm eeprom.jlink.tmp
-
 clean:
 	rm -f main.elf main.o main.bin
 
 objdump:
-	arm-none-eabi-objdump -d main.elf
+	arm-none-eabi-objdump -d main.o
 
 
 # JLink

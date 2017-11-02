@@ -32,35 +32,44 @@ _helpers__set_pin_high:
 	@ start address of pin data block.
 	pop {r0}
 
-	push {r0-r7, lr}
+	push {r2-r3, lr}
 
 	ldm r0, {r0-r1}
-	ldr r2, =BSRR_OFFSET
+	movs r2, 0x18 @ BSRR_OFFSET
 	adds r0, r2
-	movs r2, #1 @ set
 
-	push {r0, r1, r2}
-	bl _helpers__sr_bit
+	@ R0: memory address.
+	@ R1: bit index number.
 
-	pop {r0-r7, pc}
+	movs r3, #1
+	lsls r3, r1 @ Create bitmask.
+	ldr r2, [r0] @ Load current value.
+	orrs r2, r3 @ Update current value.
+	str r2, [r0] @ Store new value.
+
+	pop {r2-r3, pc}
 
 
 _helpers__set_pin_low:
 	@ start address of pin data block.
 	pop {r0}
 
-	push {r0-r7, lr}
+	push {r2-r3, lr}
 
 	ldm r0, {r0-r1}
-	ldr r2, =BSRR_OFFSET
-	adds r2, 16
+	movs r2, 0x28 @ BRR_OFFSET
 	adds r0, r2
-	movs r2, #1 @ reset
 
-	push {r0, r1, r2}
-	bl _helpers__sr_bit
+	@ R0: memory address.
+	@ R1: bit index number.
 
-	pop {r0-r7, pc}
+	movs r3, #1
+	lsls r3, r1 @ Create bitmask.
+	ldr r2, [r0] @ Load current value.
+	orrs r2, r3 @ Update current value.
+	str r2, [r0] @ Store new value.
+
+	pop {r2-r3, pc}
 
 
 _helpers__sr_bit:
@@ -69,13 +78,13 @@ _helpers__sr_bit:
 	@ bit value
 	pop {r0, r1, r2}
 
-	push {r0-r7, lr}
+	push {r0-r4, lr}
 
 	@ create bitmask
 	movs r3, #1
 	lsls r3, r1
 
-	ldr r5, [r0]
+	ldr r4, [r0]
 
 	@ update the bit
 	adds r2, r2
@@ -83,27 +92,27 @@ _helpers__sr_bit:
 	bne _set_bit
 
 	_clear_bit:
-		bics r5, r3
-		str r5, [r0]
-		pop {r0-r7, pc}
+		bics r4, r3
+		str r4, [r0]
+		pop {r0-r4, pc}
 
 	_set_bit:
-		orrs r5, r3
-		str r5, [r0]
-		pop {r0-r7, pc}
+		orrs r4, r3
+		str r4, [r0]
+		pop {r0-r4, pc}
 
 
 _helpers__delay:
 	@ R0 - delay value
 
 	pop {r0}
-	push {r0-r7, lr}
+	push {lr}
 
 	_local_delay:
 		subs r0, #1
-		bne _local_delay
+		bgt _local_delay
 
-	pop {r0-r7, pc}
+	pop {pc}
 
 
 _helpers__go_to_sleep:
@@ -117,6 +126,18 @@ _helpers__go_to_sleep:
 
 	sev; wfe @ Reset the event flag.
 	wfe @ Go to sleep.
+
+	pop {r0-r7, pc}
+
+
+_helpers__sysclk:
+	push {r0-r7, lr}
+
+	macros__register_bit_sr RCC_CR 0 1 @ Enable HSI16ON.
+
+	@ Select SYSCLK source (HSI16)
+	macros__register_bit_sr RCC_CFGR 1 0
+	macros__register_bit_sr RCC_CFGR 0 1
 
 	pop {r0-r7, pc}
 
@@ -144,7 +165,7 @@ _helpers__select_clock_speed:
   bl _helpers__sr_bit
 
   movs r1, #13
-  movs r2, #0
+  movs r2, #1
 	push {r0, r1, r2}
   bl _helpers__sr_bit
 
@@ -169,12 +190,12 @@ _helpers__mco_enable:
   bl _helpers__sr_bit
 
   @ Enable MCO...
-
-  ldr r0, =RCC_CFGR
-  movs r1, #24
-  movs r2, #1
-	push {r0, r1, r2}
-  bl _helpers__sr_bit
+	@ 0000: MCO output disabled, no clock on MCO
+	@ 0001: SYSCLK clock selected
+	@ 0010: HSI16 oscillator clock selected
+	@ 0011: MSI oscillator clock selected
+	macros__register_bit_sr RCC_CFGR 25 0
+	macros__register_bit_sr RCC_CFGR 24 1
 
 	pop {r0-r7, pc}
 

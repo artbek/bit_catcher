@@ -48,7 +48,9 @@ _interrupt_handlers__TIM21:
 
 	_tim21_game_stage_1:
 
+
 		bl _display__shift_down
+		bl _game__check_collision
 
 		ldr r0, =FALLING_BIT_COUNTER
 		ldr r1, [r0]

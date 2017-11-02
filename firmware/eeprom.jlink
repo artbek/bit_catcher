@@ -1,0 +1,2 @@
+loadbin eeprom.bin, 0x08080000
+q

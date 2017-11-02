@@ -1,4 +1,3 @@
-erase
 loadbin main.bin, 0x00000000
 r
 g

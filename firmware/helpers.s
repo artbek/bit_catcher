@@ -139,6 +139,21 @@ _helpers__sysclk:
 	macros__register_bit_sr RCC_CFGR 1 0
 	macros__register_bit_sr RCC_CFGR 0 1
 
+	@ HPRE (Prescaler)
+	@ 0xxx: SYSCLK not divided
+	@ 1000: SYSCLK divided by 2
+	@ 1001: SYSCLK divided by 4
+	@ 1010: SYSCLK divided by 8
+	@ 1011: SYSCLK divided by 16
+	@ 1100: SYSCLK divided by 64
+	@ 1101: SYSCLK divided by 128
+	@ 1110: SYSCLK divided by 256
+	@ 1111: SYSCLK divided by 512
+	macros__register_bit_sr RCC_CFGR 7 1
+	macros__register_bit_sr RCC_CFGR 6 0
+	macros__register_bit_sr RCC_CFGR 5 0
+	macros__register_bit_sr RCC_CFGR 4 0
+
 	pop {r0-r7, pc}
 
 

@@ -46,7 +46,6 @@ _start:
 
 	@ SYSCLK + SysTick...
 	bl _helpers__sysclk
-	bl _helpers__mco_enable
 	bl _helpers__enable_systick
 
 
@@ -109,7 +108,7 @@ _start:
 	bl _display__init_white
 	bl _game__stage_0_init
 
-	movs r0, 0
+	ldr r0, =DISPLAY__FADE_DARKNESS_MIN
 	mov r12, r0
 
 
@@ -119,7 +118,6 @@ b _loop
 _loop:
 
 	bl _display__flush
-
 
 	ldr r1, =GAME_STAGE
 	ldr r1, [r1]

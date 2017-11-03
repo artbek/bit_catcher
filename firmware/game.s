@@ -127,13 +127,18 @@ _game__score_increase:
 _game__generate_new_row_at_first_address:
 	push {r0-r7, lr}
 
+	@ Display ...
 
 	ldr r0, =FALLING_BIT_CURRENT_SHAPE_POINTER
-	ldr r1, [r0] @ R1 is current shape address (EEPROM).
+	ldr r1, [r0] @ R1: current shape address (EEPROM).
 	ldr r2, [r1] @ ROM addr (acutal shape).
+	lsls r2, 27
 
 	ldr r3, =DISPLAY_BUFFER_FIRST_ADDR
 	str r2, [r3] @ Send to display.
+
+
+	@ Increment and store the pointer ...
 
 	adds r1, 4
 	ldr r2, =FALLING_BIT_LAST_SHAPE_ADDR

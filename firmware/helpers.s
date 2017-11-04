@@ -43,9 +43,7 @@ _helpers__set_pin_high:
 
 	movs r3, #1
 	lsls r3, r1 @ Create bitmask.
-	ldr r2, [r0] @ Load current value.
-	orrs r2, r3 @ Update current value.
-	str r2, [r0] @ Store new value.
+	str r3, [r0] @ Store new value.
 
 	pop {r2-r3, pc}
 
@@ -65,9 +63,7 @@ _helpers__set_pin_low:
 
 	movs r3, #1
 	lsls r3, r1 @ Create bitmask.
-	ldr r2, [r0] @ Load current value.
-	orrs r2, r3 @ Update current value.
-	str r2, [r0] @ Store new value.
+	str r3, [r0] @ Store new value.
 
 	pop {r2-r3, pc}
 
@@ -259,17 +255,21 @@ _helpers__enable_systick:
 	pop {r0-r7, pc}
 
 
-_helpers__eeprom:
+_helpers__eeprom_unlock:
 	push {r0-r7, lr}
 
-	@ Unlock EEPROM:
 	ldr r0, =FLASH_PEKEYR
 	ldr r1, =PEKEY1
 	str r1, [r0]
 	ldr r1, =PEKEY2
 	str r1, [r0]
 
-	@ Lock EEPROM:
+	pop {r0-r7, pc}
+
+
+_helpers__eeprom_lock:
+	push {r0-r7, lr}
+
 	macros__register_bit_sr FLASH_PECR 0 1
 
 	pop {r0-r7, pc}

@@ -16,17 +16,15 @@
 .pool @ Literal Pools have limited range and LDR may fail.
 
 .include "display.s"
+
+.pool @ Literal Pools have limited range and LDR may fail.
+
 .include "game.s"
 
 .pool @ Literal Pools have limited range and LDR may fail.
 
 
 _start:
-
-	@ ON/OFF switch bounce.
-	ldr r1, =0x0002ffff
-	push {r1}; bl _helpers__delay
-
 
 	@ Enable GPIO clocks...
 	ldr   r0, =RCC_IOPENR
@@ -104,12 +102,16 @@ _start:
 	movs  r2, #1 @ set
 	push {r0, r1, r2}; bl _helpers__sr_bit
 
-	@ Init game ...
-	bl _display__init_white
-	bl _game__stage_0_init
 
-	ldr r0, =DISPLAY__FADE_DARKNESS_MIN
+	@ Init game ...
+	ldr r0, =DISPLAY__FADE_DARKNESS_MAX
 	mov r12, r0
+
+	bl _display__init_poster
+	bl _display__fade_in
+	bl _display__pause
+	bl _display__pause
+	bl _game__stage_0_init
 
 
 b _loop
@@ -195,6 +197,7 @@ _loop:
 	push {r0}
 	bl _helpers__read_pin
 	bcc _keep_running
+		bl _display__fade_out
 		bl _helpers__go_to_sleep
 	_keep_running:
 

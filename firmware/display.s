@@ -34,48 +34,39 @@ _display__init_white:
 	pop {r0-r7, pc}
 
 
-_display__init_score:
+_display__init_poster:
+	push {r0-r7, lr}
+
+	macros__register_value DISPLAY_BUFFER_CURSOR 0
+
+	ldr r0, =DISPLAY_BUFFER_FIRST_ADDR
+	subs r0, 4
+
+	adds r0, 4; ldr r1, =0b11111000000000000000000000000000; str r1, [r0];
+	adds r0, 4; ldr r1, =0b11011000000000000000000000000000; str r1, [r0];
+	adds r0, 4; ldr r1, =0b01011000000000000000000000000000; str r1, [r0];
+	adds r0, 4; ldr r1, =0b00010000000000000000000000000000; str r1, [r0];
+	adds r0, 4; ldr r1, =0b00010000000000000000000000000000; str r1, [r0];
+	adds r0, 4; ldr r1, =0b01000000000000000000000000000000; str r1, [r0]
+	adds r0, 4; ldr r1, =0b00000000000000000000000000000000; str r1, [r0];
+
+	pop {r0-r7, pc}
+
+
+_display__init_current_score:
 	push {r0-r7, lr}
 
 	macros__register_value DISPLAY_BUFFER_CURSOR 0
 
 	ldr r0, =DISPLAY_BUFFER_FIRST_ADDR
 
-	.equ DISPLAY_BUFFER_ROW_1, 0b00000000000000000000000000000000
-	.equ DISPLAY_BUFFER_ROW_2, 0b00000000000000000000000000000000
-	.equ DISPLAY_BUFFER_ROW_3, 0b00110000000000000000000000011000
-	.equ DISPLAY_BUFFER_ROW_4, 0b00000000000000000000000000000000
-	.equ DISPLAY_BUFFER_ROW_5, 0b00110000000000000000000000011000
-	.equ DISPLAY_BUFFER_ROW_6, 0b00000000000000000000000000000000
-	.equ DISPLAY_BUFFER_ROW_7, 0b00000000000000000000000000000000
-
-	adds r0, 0
-	ldr r1, =DISPLAY_BUFFER_ROW_1
-	str r1, [r0]
-
-	adds r0, 4
-	ldr r1, =DISPLAY_BUFFER_ROW_2
-	str r1, [r0]
-
-	adds r0, 4
-	ldr r1, =DISPLAY_BUFFER_ROW_3
-	str r1, [r0]
-
-	adds r0, 4
-	ldr r1, =DISPLAY_BUFFER_ROW_4
-	str r1, [r0]
-
-	adds r0, 4
-	ldr r1, =DISPLAY_BUFFER_ROW_5
-	str r1, [r0]
-
-	adds r0, 4
-	ldr r1, =DISPLAY_BUFFER_ROW_6
-	str r1, [r0]
-
-	adds r0, 4
-	ldr r1, =DISPLAY_BUFFER_ROW_7
-	str r1, [r0]
+	adds r0, 0; ldr r1, =0b00000000000000000000000000000000; str r1, [r0]
+	adds r0, 4; ldr r1, =0b00000000000000000000000000000000; str r1, [r0];
+	adds r0, 4; ldr r1, =0b00111000000000000000000000111000; str r1, [r0];
+	adds r0, 4; ldr r1, =0b00000000000000000000000000000000; str r1, [r0];
+	adds r0, 4; ldr r1, =0b00111000000000000000000000111000; str r1, [r0];
+	adds r0, 4; ldr r1, =0b00000000000000000000000000000000; str r1, [r0];
+	adds r0, 4; ldr r1, =0b00000000000000000000000000000000; str r1, [r0];
 
 	pop {r0-r7, pc}
 
@@ -87,47 +78,31 @@ _display__add_boom:
 
 	ldr r0, =DISPLAY_BUFFER_FIRST_ADDR
 
-	.equ DISPLAY_BUFFER_ROW_1, 0b00100000000000000000000000000000
-	.equ DISPLAY_BUFFER_ROW_2, 0b10001000000000000000000000000000
-	.equ DISPLAY_BUFFER_ROW_3, 0b00000000000000000000000000000000
-	.equ DISPLAY_BUFFER_ROW_4, 0b01110000000000000000000000000000
-	.equ DISPLAY_BUFFER_ROW_5, 0b00000000000000000000000000000000
-	.equ DISPLAY_BUFFER_ROW_6, 0b11111000000000000000000000000000
-	.equ DISPLAY_BUFFER_ROW_7, 0b11111000000000000000000000000000
-
-	adds r0, 0; ldr r1, =DISPLAY_BUFFER_ROW_1; str r1, [r0]
-	adds r0, 4; ldr r1, =DISPLAY_BUFFER_ROW_2; str r1, [r0];
-	adds r0, 4; ldr r1, =DISPLAY_BUFFER_ROW_3; str r1, [r0];
-	adds r0, 4; ldr r1, =DISPLAY_BUFFER_ROW_4; str r1, [r0];
-	adds r0, 4; ldr r1, =DISPLAY_BUFFER_ROW_5; str r1, [r0];
-	adds r0, 4; ldr r1, =DISPLAY_BUFFER_ROW_6; str r1, [r0];
-	adds r0, 4; ldr r1, =DISPLAY_BUFFER_ROW_7; str r1, [r0];
+	adds r0, 0; ldr r1, =0b00100000000000000000000000000000; str r1, [r0]
+	adds r0, 4; ldr r1, =0b10001000000000000000000000000000; str r1, [r0];
+	adds r0, 4; ldr r1, =0b00000000000000000000000000000000; str r1, [r0];
+	adds r0, 4; ldr r1, =0b01110000000000000000000000000000; str r1, [r0];
+	adds r0, 4; ldr r1, =0b00000000000000000000000000000000; str r1, [r0];
+	adds r0, 4; ldr r1, =0b11111000000000000000000000000000; str r1, [r0];
+	adds r0, 4; ldr r1, =0b11111000000000000000000000000000; str r1, [r0];
 
 	pop {r0-r7, pc}
 
 
-_display__init:
+_display__init_hi_score:
 	push {r0-r7, lr}
 
 	macros__register_value DISPLAY_BUFFER_CURSOR 0
 
 	ldr r0, =DISPLAY_BUFFER_FIRST_ADDR
 
-	.equ DISPLAY_BUFFER_ROW_1, 0b01001001000000111000111000111000
-	.equ DISPLAY_BUFFER_ROW_2, 0b01001000000001000101000101000100
-	.equ DISPLAY_BUFFER_ROW_3, 0b01001001001001001101001101001100
-	.equ DISPLAY_BUFFER_ROW_4, 0b01111011001001010101010101010100
-	.equ DISPLAY_BUFFER_ROW_5, 0b01001001000001100101100101100100
-	.equ DISPLAY_BUFFER_ROW_6, 0b01001001001001000101000101000100
-	.equ DISPLAY_BUFFER_ROW_7, 0b01001011101000111000111000111000
-
-	adds r0, 0; ldr r1, =DISPLAY_BUFFER_ROW_1; str r1, [r0]
-	adds r0, 4; ldr r1, =DISPLAY_BUFFER_ROW_2; str r1, [r0];
-	adds r0, 4; ldr r1, =DISPLAY_BUFFER_ROW_3; str r1, [r0];
-	adds r0, 4; ldr r1, =DISPLAY_BUFFER_ROW_4; str r1, [r0];
-	adds r0, 4; ldr r1, =DISPLAY_BUFFER_ROW_5; str r1, [r0];
-	adds r0, 4; ldr r1, =DISPLAY_BUFFER_ROW_6; str r1, [r0];
-	adds r0, 4; ldr r1, =DISPLAY_BUFFER_ROW_7; str r1, [r0];
+	adds r0, 0; ldr r1, =0b01001001000000000000000000000000; str r1, [r0]
+	adds r0, 4; ldr r1, =0b01001000000000000000000000000000; str r1, [r0];
+	adds r0, 4; ldr r1, =0b01001001001000000000000000000000; str r1, [r0];
+	adds r0, 4; ldr r1, =0b01111011001000000000000000000000; str r1, [r0];
+	adds r0, 4; ldr r1, =0b01001001000000000000000000000000; str r1, [r0];
+	adds r0, 4; ldr r1, =0b01001001001000000000000000000000; str r1, [r0];
+	adds r0, 4; ldr r1, =0b01001011101000000000000000000000; str r1, [r0];
 
 	pop {r0-r7, pc}
 
@@ -309,3 +284,64 @@ _display__pause:
 
 	pop {r0-r7, pc}
 
+
+_display__pause_short:
+	push {r0-r7, lr}
+
+	ldr r0, =DISPLAY__PAUSE_SHORT
+	ldr r2, =DISPLAY__PAUSE_SHORT_STEP
+	movs r1, 0
+	_pause_short_more:
+		push {r0,r1}
+		bl _display__flush
+		pop {r0,r1}
+		adds r1, r2
+		cmp r1, r0
+	blt _pause_short_more
+
+	pop {r0-r7, pc}
+
+
+_display__print_number:
+	@ R0: number to print.
+	@ R7: position index.
+	pop {r0, r7} @ R0: number to print.
+
+	push {r0-r7, lr}
+
+	movs r4, 2 @ Digit display index (3 digits to display).
+
+	_display_with_score_next_digit:
+		movs r2, 0 @ Start with digit 0.
+		movs r1, r0
+
+		_keep_dividing:
+			adds r2, 1
+			subs r1, 10
+			cmp r1, 0
+		bge _keep_dividing
+
+		subs r2, 1 @ We started at digit 1. R2: updated score.
+
+		movs r5, 10
+		movs r3, r2
+		muls r3, r5
+		movs r1, r0
+		subs r1, r3 @ R1: first digit.
+
+		push {r0-r7}
+
+		movs r5, 6
+		movs r6, r4
+		muls r6, r5
+		adds r6, r7 @ R7: x-offset.
+		push {r1, r6}; bl _display__print_digit_on_position
+
+		pop {r0-r7}
+
+		movs r0, r2 @ Updated score: result of intiger division by 10.
+
+		subs r4, 1
+	bge _display_with_score_next_digit
+
+	pop {r0-r7, pc}

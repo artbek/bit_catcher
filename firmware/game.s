@@ -6,8 +6,15 @@ _game__stage_0_init:
 	macros__register_value TIM21_PSC GAME__STAGE0_PSC @ Prescaler.
 
 	bl _display__fade_out
+	bl _display__init_blank
+	bl _display__pause_short
 
-	bl _display__init
+	bl _display__init_hi_score
+	ldr r0, =GAME_HISCORE
+	ldr r0, [r0]
+	movs r7, 13
+	push {r0, r7}
+	bl _display__print_number
 
 	bl _display__fade_in
 
@@ -25,6 +32,8 @@ _game__stage_1_init:
 	macros__register_value TIM21_PSC GAME__STAGE1_PSC @ Prescaler.
 
 	bl _display__fade_out
+	bl _display__init_blank
+	bl _display__pause_short
 
 	ldr r0, =FALLING_BIT_CURRENT_SHAPE_POINTER
 	ldr r1, =FALLING_BIT_FIRST_SHAPE_ADDR
@@ -51,10 +60,26 @@ _game__stage_2_init:
 	macros__register_value TIM21_ARR GAME__STAGE2_ARR @ ARR.
 	macros__register_value TIM21_PSC GAME__STAGE2_PSC @ Prescaler.
 
+	bl _display__fade_out
+
+	ldr r0, =DISPLAY__FADE_DARKNESS_MIN
+	mov r12, r0
+	bl _display__fade_out
+
+	ldr r0, =DISPLAY__FADE_DARKNESS_MIN
+	mov r12, r0
 	bl _display__pause
 	bl _display__fade_out
 
-	bl _game__init_display_with_score
+	bl _display__init_blank
+	bl _display__pause
+
+	bl _display__init_current_score
+	ldr r0, =GAME_CURRENT_SCORE
+	ldr r0, [r0]
+	movs r7, 7
+	push {r0, r7}
+	bl _display__print_number
 
 	bl _display__fade_in
 
@@ -86,6 +111,7 @@ _game__check_collision:
 			macros__register_value DISPLAY_BUFFER_LAST_ADDR 0 @ 1 point at a time.
 			b _ignore_collision_checks
 		_game_over:
+			bl _game__save_hi_score
 			bl _display__add_boom
 			bl _game__stage_2_init
 			b _ignore_collision_checks
@@ -228,51 +254,23 @@ _game__process_lr_buttons:
 	pop {r0-r7, pc}
 
 
-_game__init_display_with_score:
+_game__save_hi_score:
 	push {r0-r7, lr}
 
-	bl _display__init_score
+	ldr r0, =GAME_HISCORE
+	ldr r1, [r0]
 
-	ldr r0, =GAME_CURRENT_SCORE
-	ldr r0, [r0]
+	ldr r2, =GAME_CURRENT_SCORE
+	ldr r3, [r2]
 
-	movs r4, 2 @ Digit display index (3 digits to display).
+	@ R1: saved hi score.
+	@ R3: current score.
+	cmp r1, r3
 
-	_display_with_score_next_digit:
-
-		movs r2, 0 @ Digit.
-		movs r1, r0
-
-		_keep_dividing:
-			adds r2, 1
-			subs r1, 10
-			cmp r1, 0
-		bge _keep_dividing
-
-		subs r2, 1 @ We started at 1. R2: updated score.
-
-		movs r5, 10
-		movs r3, r2
-		muls r3, r5
-		movs r1, r0
-		subs r1, r3 @ R1: first digit.
-
-		push {r0-r7}
-
-		movs r5, 6
-		movs r6, r4
-		muls r6, r5
-		adds r6, 7
-		push {r1, r6}; bl _display__print_digit_on_position
-
-		pop {r0-r7}
-
-		movs r0, r2 @ Updated score: result of intiger division by 10.
-
-		subs r4, 1
-
-	bge _display_with_score_next_digit
-
+	bge _dont_update_hi_score
+		bl _helpers__eeprom_unlock
+		str r3, [r0]
+		bl _helpers__eeprom_lock
+	_dont_update_hi_score:
 
 	pop {r0-r7, pc}
-

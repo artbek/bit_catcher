@@ -72,7 +72,7 @@ _game__stage_2_init:
 	bl _display__fade_out
 
 	bl _display__init_blank
-	bl _display__pause
+	bl _display__pause_short
 
 	bl _display__init_current_score
 	ldr r0, =GAME_CURRENT_SCORE

@@ -1,7 +1,7 @@
 Bit Catcher (Mini Game Console)
 ===============================
 
-Video: https://www.instagram.com/p/BbNSRn6nrQ5/?taken-by=artbeks
+Video: https://youtu.be/HpCyLKLNJE4
 
 <br />
 
